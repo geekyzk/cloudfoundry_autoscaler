@@ -1,6 +1,0 @@
----
-applications:
-- name: autoscaler_demo
-  memory: 1024M
-  host: autoscalerdemo
-  domain: szga.pengyun.gov.cn
