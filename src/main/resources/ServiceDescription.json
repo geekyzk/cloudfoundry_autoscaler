@@ -1,0 +1,13 @@
+{
+  "name" : "p-mysql-mix",
+  "description" : "Mysql Service for application development and testing",
+  "bindable" : true,
+  "tags" : ["mysql"],
+  "metadata" : {
+    "longDescription" : "Mysql Service. New services create new database, Plans defines database and session quotas. Bindings create users",
+    "imageUrl" : "http://icons.iconarchive.com/icons/graphics-vibe/developer/256/mysql-icon.png",
+    "displayName" : "Mysql Integrated Machine",
+    "providerDisplayName" : "Citics Securities",
+    "supportUrl" : "http://support.pivotal.io"
+  }
+}
