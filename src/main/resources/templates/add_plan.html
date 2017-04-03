@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加service信息</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+</head>
+<body>
+<div class="container" id="content">
+    <form class="form-horizontal">
+        <div class="form-group">
+            <label for="name" class="col-sm-2 control-label">plan名称</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.name" class="form-control" id="name" placeholder="name">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="description" class="col-sm-2 control-label">description</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.description" class="form-control" id="description"
+                       placeholder="description">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="bulletslist" class="col-sm-2 control-label">bullets</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="bulletslist" class="form-control" id="bulletslist"
+                       placeholder="bulletslist">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="addCpu" class="col-sm-2 control-label">addCpu</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.metadata.addCpu" class="form-control" id="addCpu" placeholder="addCpu">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="cutCpu" class="col-sm-2 control-label">cutCpu</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.metadata.cutCpu" class="form-control" id="cutCpu" placeholder="cutCpu">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="minCpu" class="col-sm-2 control-label">minInstance</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.metadata.minI" class="form-control" id="minCpu" placeholder="minCpu">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="maxCpu" class="col-sm-2 control-label">maxInstance</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.metadata.maxI" class="form-control" id="maxCpu" placeholder="maxCpu">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="displayName" class="col-sm-2 control-label">displayName</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.metadata.displayName" class="form-control" id="displayName"
+                       placeholder="displayName">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="type" class="col-sm-2 control-label">type</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.metadata.type" class="form-control" id="type" placeholder="type">
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <a v-on:click="savePlan" class="btn btn-default" href="javascript:void(0)">保存配置</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="/vue.js"></script>
+<script src="/axios.js"></script>
+<script>
+    new Vue({
+        el: "#content",
+        data: {
+            bulletslist: '',
+            serviceId: '',
+            form: {
+                name: '',
+                description: '',
+                metadata: {
+                    addCpu: 0,
+                    cutCpu: 0,
+                    minI: 0,
+                    maxI: 0,
+                    bullets: [],
+                    displayName: '',
+                    type: ''
+                }
+            }
+
+        },
+        methods: {
+            savePlan: function () {
+                var that = this
+                console.log(this.form);
+                var url = '/v2/catalog/services/' + this.getParameterByName("serviceId") + "/plans"
+                axios.post(url, that.form)
+                    .then(function (response) {
+                        console.log(response)
+//                        debugger
+                        alert("创建成功")
+                        window.location.href = "/"
+                    })
+                    .catch(function (error) {
+                        console.log(error)
+                        debugger;
+                    })
+//                debugger;
+            },
+            getParameterByName: function (name) {
+                name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+                var regexS = "[\\?&]" + name + "=([^&#]*)";
+                var regex = new RegExp(regexS);
+                var results = regex.exec(window.location.search);
+                if (results == null)
+                    return "";
+                else
+                    return decodeURIComponent(results[1].replace(/\+/g, " "));
+            }
+        },
+        watch: {
+            bulletslist: function (val) {
+                this.form.metadata.bullets = val.split(',')
+            }
+        },
+        created: function () {
+            var serviceId = this.getParameterByName("serviceId");
+            if (serviceId == "") {
+                alert("请先创建service")
+                window.location.href = "/"
+            }
+        }
+    })
+</script>
+</body>
+</html>

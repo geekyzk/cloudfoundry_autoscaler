@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加service信息</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+</head>
+<body>
+<div class="container" id="content">
+    <form class="form-horizontal">
+        <div class="form-group">
+            <label for="name" class="col-sm-2 control-label">服务名称</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.name" class="form-control" id="name" placeholder="name">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="description" class="col-sm-2 control-label">description</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.description" class="form-control" id="description"
+                       placeholder="description">
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox">
+                    <label>
+                        <input v-model="form.bindable" type="checkbox"> bindable
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="tagsList" class="col-sm-2 control-label">tags</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="tagsList" class="form-control" id="tagsList" placeholder="tagsList">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="longDescription" class="col-sm-2 control-label">longDescription</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.metadata.longDescription" class="form-control" id="longDescription"
+                       placeholder="longDescription">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="imageUrl" class="col-sm-2 control-label">imageUrl</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.metadata.imageUrl" class="form-control" id="imageUrl"
+                       placeholder="imageUrl">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="displayName" class="col-sm-2 control-label">displayName</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.metadata.displayName" class="form-control" id="displayName"
+                       placeholder="displayName">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="providerDisplayName" class="col-sm-2 control-label">providerDisplayName</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.metadata.providerDisplayName" class="form-control"
+                       id="providerDisplayName" placeholder="providerDisplayName">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="supportUrl" class="col-sm-2 control-label">supportUrl</label>
+            <div class="col-sm-10">
+                <input type="text" v-model="form.metadata.supportUrl" class="form-control" id="supportUrl"
+                       placeholder="supportUrl">
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <a v-on:click="saveService" class="btn btn-default" href="javascript:void(0)">next</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="/vue.js"></script>
+<script src="/axios.js"></script>
+<script>
+    new Vue({
+        el: "#content",
+        data: {
+            tagsList: '',
+            form: {
+                name: '',
+                description: '',
+                bindable: true,
+                tags: [],
+                metadata: {
+                    longDescription: '',
+                    imageUrl: '',
+                    displayName: '',
+                    providerDisplayName: '',
+                    supportUrl: ''
+                }
+            }
+
+        },
+        methods: {
+            saveService: function () {
+                var that = this
+                console.log(this.form);
+                debugger;
+                axios.post('/v2/catalog/services', that.form)
+                    .then(function (response) {
+                        console.log(response)
+                        window.location.href = "/add_plan?serviceId=" + response.data.id
+                    })
+                    .catch(function (error) {
+                        console.log(error)
+                        debugger;
+                    })
+//                debugger;
+            }
+        },
+        watch: {
+            tagsList: function (val) {
+                this.form.tags = val.split(',')
+            }
+        },
+        created: function () {
+//            var that = this
+//            axios.get("/v2/catalog")
+//                .then(function (response) {
+//                    console.log(response.data)
+//                    that.services = response.data
+//                    console.log('--')
+//                    console.log(that.services)
+//                    console.log('--')
+//                })
+//                .catch(function (error) {
+//
+//                })
+        }
+    })
+</script>
+</body>
+</html>

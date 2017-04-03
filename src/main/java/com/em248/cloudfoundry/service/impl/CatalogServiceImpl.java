@@ -1,20 +1,19 @@
 package com.em248.cloudfoundry.service.impl;
 
-import java.util.List;
-
 import com.em248.cloudfoundry.entity.ServiceDefinition;
 import com.em248.cloudfoundry.repository.PlanRepository;
 import com.em248.cloudfoundry.repository.ServiceDefinitionRepository;
-import com.em248.cloudfoundry.service.BaseService;
 import com.em248.cloudfoundry.service.CatalogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * @author tian
  */
 @Service
-public class CatalogServiceImpl extends BaseService implements CatalogService {
+public class CatalogServiceImpl implements CatalogService {
 
 	@Autowired
 	private PlanRepository planRepository;
@@ -30,8 +29,8 @@ public class CatalogServiceImpl extends BaseService implements CatalogService {
 
 	@Override
 	public List<ServiceDefinition> listServices() {
-		return makeCollection(serviceRepository.findAll());
-	}
+        return serviceRepository.findAll();
+    }
 
 	@Override
 	public boolean deleteServiceDefinition(String serviceDefinitionId) {

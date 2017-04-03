@@ -1,22 +1,21 @@
 package com.em248.cloudfoundry.service.impl;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.em248.cloudfoundry.entity.*;
 import com.em248.cloudfoundry.repository.PlanRepository;
 import com.em248.cloudfoundry.repository.ServiceDefinitionRepository;
 import com.em248.cloudfoundry.repository.ServiceInstanceBindingRepository;
 import com.em248.cloudfoundry.repository.ServiceInstanceRepository;
-import com.em248.cloudfoundry.service.BaseService;
 import com.em248.cloudfoundry.service.ServiceManagement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 
 @Service
-public class ServiceManagementImpl extends BaseService implements ServiceManagement {
+public class ServiceManagementImpl implements ServiceManagement {
     @Autowired
     private PlanRepository planRepository;
 
@@ -84,7 +83,7 @@ public class ServiceManagementImpl extends BaseService implements ServiceManagem
 
     @Override
     public List<ServiceInstance> listInstances() {
-        return makeCollection(serviceInstanceRepository.findAll());
+        return serviceInstanceRepository.findAll();
     }
 
 
@@ -127,7 +126,6 @@ public class ServiceManagementImpl extends BaseService implements ServiceManagem
         if (binding == null) {
             return false;
         }
-        ServiceInstance instance = serviceInstanceRepository.findOne(binding.getServiceInstanceId());
         bindingRepository.delete(binding);
         return true;
     }

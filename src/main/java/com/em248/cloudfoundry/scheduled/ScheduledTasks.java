@@ -1,11 +1,12 @@
 package com.em248.cloudfoundry.scheduled;
 
+import com.em248.cloudfoundry.entity.Plan;
+import com.em248.cloudfoundry.entity.ServiceInstance;
 import com.em248.cloudfoundry.entity.ServiceInstanceBinding;
+import com.em248.cloudfoundry.repository.PlanRepository;
 import com.em248.cloudfoundry.repository.ServiceInstanceBindingRepository;
-import org.cloudfoundry.client.v2.applications.ApplicationStatisticsRequest;
-import org.cloudfoundry.client.v2.applications.ApplicationStatisticsResponse;
-import org.cloudfoundry.client.v2.applications.InstanceStatistics;
-import org.cloudfoundry.client.v2.applications.UpdateApplicationRequest;
+import com.em248.cloudfoundry.repository.ServiceInstanceRepository;
+import org.cloudfoundry.client.v2.applications.*;
 import org.cloudfoundry.reactor.client.ReactorCloudFoundryClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,7 +28,7 @@ import java.util.Set;
 @Component
 @Configurable
 @EnableScheduling
-public class ScheduledTasks{
+public class ScheduledTasks {
 
     @Autowired
     ReactorCloudFoundryClient cloudFoundryClient;
@@ -35,28 +36,49 @@ public class ScheduledTasks{
     @Autowired
     ServiceInstanceBindingRepository instanceBindingRepository;
 
-    @Scheduled(fixedRate = 1000 * 10)
-    public void reportCurrentTime(){
-        System.out.println ("Scheduling Tasks Examples: The time is now " + dateFormat ().format (new Date()));
+    @Autowired
+    ServiceInstanceRepository serviceInstanceRepository;
+    @Autowired
+    PlanRepository planRepository;
 
-        Iterable<ServiceInstanceBinding> instanceBindings = instanceBindingRepository.findAll();
-        Iterator<ServiceInstanceBinding> serviceInstanceBindingIterator = instanceBindings.iterator();
-        while(serviceInstanceBindingIterator.hasNext()){
-            ServiceInstanceBinding serviceInstanceBinding = serviceInstanceBindingIterator.next();
-            String appGuid = serviceInstanceBinding.getAppGuid();
-            ApplicationStatisticsResponse appStatis = cloudFoundryClient.applicationsV2().statistics(ApplicationStatisticsRequest.builder().applicationId(appGuid).build()).block();
-            Set<Map.Entry<String, InstanceStatistics>> entries = appStatis.getInstances().entrySet();
-            for (Map.Entry<String,InstanceStatistics> item : entries){
-                System.out.println(item.getKey());
-                System.out.println(item.getValue().getState());
-                Double cpu = item.getValue().getStatistics().getUsage().getCpu();
-                if(cpu > 0.8 ){
-                    if (entries.size() < 5 ) {
-                        cloudFoundryClient.applicationsV2()
-                                .update(UpdateApplicationRequest.builder()
-                                        .applicationId(appGuid)
-                                        .instances(entries.size() + 1)
-                                        .build())
+    @Scheduled(fixedRate = 1000 * 10)
+    public void reportCurrentTime() {
+        System.out.println("Scheduling Tasks Examples: The time is now " + dateFormat().format(new Date()));
+        List<ServiceInstanceBinding> bindingList = instanceBindingRepository.findAll();
+        for (ServiceInstanceBinding s : bindingList) {
+
+            String appGuid = s.getAppGuid();
+            SummaryApplicationResponse summary = cloudFoundryClient.applicationsV2().summary(SummaryApplicationRequest.builder().applicationId(appGuid).build()).block();
+            if ("STARTED".equals(summary.getState())) {
+                ServiceInstance serviceInstance = serviceInstanceRepository.findOne(s.getServiceInstanceId());
+                Plan plan = planRepository.findOne(serviceInstance.getPlanId());
+                Map<String, String> other = plan.getMetadata().getOther();
+                Double addCpu = other.get("addCpu") != null ? Double.parseDouble(other.get("addCpu")) : 0.8;
+                Double cutCpu = other.get("cutCpu") != null ? Double.parseDouble(other.get("cutCpu")) : 0.2;
+                Integer maxI = other.get("maxI") != null ? Integer.parseInt(other.get("maxI")) : 5;
+                Integer minI = other.get("minI") != null ? Integer.parseInt(other.get("minI")) : 1;
+                ApplicationStatisticsResponse appStatis = cloudFoundryClient.applicationsV2().statistics(ApplicationStatisticsRequest.builder().applicationId(appGuid).build()).block();
+                Set<Map.Entry<String, InstanceStatistics>> entries = appStatis.getInstances().entrySet();
+                long overCpuCount = entries.stream()
+                        .filter(item -> item.getValue().getState().equals("RUNNING"))
+                        .filter(item -> item.getValue().getStatistics().getUsage().getCpu() > addCpu)
+                        .count();
+                if (overCpuCount >= 1 && entries.size() < maxI) {
+                    cloudFoundryClient.applicationsV2().update(UpdateApplicationRequest.builder()
+                            .applicationId(appGuid)
+                            .instances(entries.size() + 1)
+                            .build())
+                            .block();
+                } else if (overCpuCount < 1 && entries.size() > minI) {
+                    long downCpuCount = entries.stream()
+                            .filter(item -> item.getValue().getState().equals("RUNNING"))
+                            .filter(item -> item.getValue().getStatistics().getUsage().getCpu() < cutCpu)
+                            .count();
+                    if (downCpuCount >= 1) {
+                        cloudFoundryClient.applicationsV2().update(UpdateApplicationRequest.builder()
+                                .applicationId(appGuid)
+                                .instances(entries.size() - 1)
+                                .build())
                                 .block();
                     }
                 }
@@ -65,8 +87,8 @@ public class ScheduledTasks{
     }
 
 
-    private SimpleDateFormat dateFormat(){
-        return new SimpleDateFormat ("HH:mm:ss");
+    private SimpleDateFormat dateFormat() {
+        return new SimpleDateFormat("HH:mm:ss");
     }
 
 }

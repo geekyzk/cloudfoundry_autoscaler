@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>broker 设置</title>
+    <link rel="stylesheet" href="/css/bootstrap.css">
+</head>
+<body>
+<div class="container" id="content">
+    <a href="/add_service"><h1>创建broker</h1></a>
+    <div class="row ">
+        <div class="col-sm-6" style="min-height: 500px" v-for="service in services">
+            <div v-for="(value,key) in service">
+                <span>{{key}}:</span>
+                <span>{{value}}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="/vue.js"></script>
+<script src="/axios.js"></script>
+<script>
+    new Vue({
+        el: "#content",
+        data: {
+            services: []
+        },
+        created: function () {
+            var that = this
+            axios.get("/v2/catalog")
+                .then(function (response) {
+                    console.log(response.data)
+                    that.services = that.services.concat(response.data.services)
+                    console.log('--')
+                    console.log(that.services)
+                    console.log('--')
+                })
+                .catch(function (error) {
+
+                })
+        }
+    })
+</script>
+</body>
+</html>
